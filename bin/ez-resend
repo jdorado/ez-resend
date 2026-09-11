@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+: "${EZ_RESEND_LAUNCHER:?Use the agent-bound tools/bin/ez or set its absolute path}"
+case "$EZ_RESEND_LAUNCHER" in /*) ;; *) exit 2 ;; esac
+exec "$EZ_RESEND_LAUNCHER" resend "$@"

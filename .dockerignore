@@ -1,0 +1,15 @@
+*
+!package.json
+!ez-plugin.json
+!ez-deployment.json
+!README.md
+!SECURITY.md
+!CONTRIBUTING.md
+!CHANGELOG.md
+!LICENSE
+!bin/
+!bin/**
+!src/
+!src/**
+!skills/
+!skills/**

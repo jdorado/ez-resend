@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "resend",
+  "version": "0.1.0-beta.1",
+  "description": "Receive Resend email into private, idempotent agent receipts",
+  "commands": {
+    "resend": {
+      "executable": "bin/ez-resend",
+      "args": []
+    }
+  },
+  "skills": [
+    "skills/resend/SKILL.md"
+  ]
+}

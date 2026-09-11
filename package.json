@@ -1,0 +1,60 @@
+{
+  "name": "@jc_stack/ez-resend",
+  "version": "0.1.0-beta.1",
+  "description": "Dockerized Resend receiving plugin for Ez agents",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "ez-resend": "bin/ez-resend"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skills",
+    "test",
+    "Dockerfile",
+    ".dockerignore",
+    "ez-plugin.json",
+    "ez-deployment.json",
+    "README.md",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "verify": "npm test && node --check src/cli.mjs && node --check src/store.mjs",
+    "prepublishOnly": "npm run verify",
+    "release:check": "node scripts/release-check.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "beta",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "ai-agent",
+    "resend",
+    "email",
+    "docker",
+    "ez-plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jdorado/ez-resend.git"
+  },
+  "homepage": "https://github.com/jdorado/ez-resend#readme",
+  "bugs": {
+    "url": "https://github.com/jdorado/ez-resend/issues"
+  },
+  "ezRelease": {
+    "protocol": 1,
+    "kind": "plugin",
+    "stateSchema": 1,
+    "mainProtocol": 1
+  }
+}
