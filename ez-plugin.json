@@ -6,7 +6,13 @@
   "commands": {
     "resend": {
       "executable": "bin/ez-resend",
-      "args": []
+      "args": [],
+      "exposure": {
+        "receivesExternalContent": true,
+        "sendsExternally": false,
+        "changesRecords": false,
+        "requiresReview": true
+      }
     }
   },
   "skills": [
