@@ -9,3 +9,12 @@ configuration.
 Run `npm run verify`, `npm run release:check`, `docker build --target runtime -t
 ez-resend:check .`, and `git diff --check`. Changes to credential handling,
 receipt identity, or recovery require focused negative tests.
+
+## Beta releases
+
+Ez CTO owns an approved beta through the protected `Release` GitHub Actions
+environment: inspect the final commit and CI, dispatch the exact version, approve
+the deployment as CTO, then read back npm version/tags/integrity, the GitHub
+prerelease, and the target runtime. Do not ask the owner to click a routine
+release approval or provide an npm token. A new package's one-time npm 2FA and
+trusted-publisher enrollment is the only bootstrap exception.
