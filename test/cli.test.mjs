@@ -36,7 +36,12 @@ test('init stores the key privately and poll captures only the explicit recipien
   assert.equal(first.inspected, 2);
   assert.equal(first.captured, 1);
   assert.equal(first.skipped, 1);
-  assert.equal(first.messages[0].id, 'one');
+  const claimed = await main(['receiving', 'claim', '--run-id', 'scheduled_one'], stream({}), options);
+  assert.equal(claimed.receipt.message.id, 'one');
+  assert.equal((await main(['status'], stream({}), options)).states.processing, 1);
+  await assert.rejects(main(['receiving', 'acknowledge', '--id', 'one', '--run-id', 'other_run'], stream({}), options), /exact claiming run/);
+  const acknowledged = await main(['receiving', 'acknowledge', '--id', 'one', '--run-id', 'scheduled_one'], stream({}), options);
+  assert.equal(acknowledged.receipt.state, 'processed');
   const second = await main(['receiving', 'poll', '--limit', '2', '--recipient', 'scouts@example.com'], stream({}), options);
   assert.equal(second.captured, 0);
   assert.equal((await main(['receipt', 'one'], stream({}), options)).message.subject, 'Scout one');

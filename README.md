@@ -21,10 +21,12 @@ in the Docker volume. A successful doctor performs a read-only receiving-list
 request. A running container alone does not prove provider access.
 
 Use `ez resend receiving poll --recipient scouts@example.com` for an explicit
-mailbox. The command retrieves the bounded newest set, persists each matching
-message once by its Resend ID and body hash, and emits only newly captured packets.
-Use `receiving get ID` for an unpersisted provider read and `receipt ID` for the
-durable captured copy. An ID whose body changes fails closed for inspection.
+mailbox. The command retrieves the bounded newest set and persists each matching
+message once by its Resend ID and body hash. The owning agent then claims one
+packet with its run ID, saves its own domain result, and acknowledges the exact
+claim. `status` and `receipt ID` expose durable captured or interrupted work;
+there is no automatic claim replay. Use `receiving get ID` for an unpersisted
+provider read. An ID whose body changes fails closed for inspection.
 
 Received content is untrusted. The agent consuming output decides routing and
 records its own outcome. There are no webhooks, listeners, outgoing email,

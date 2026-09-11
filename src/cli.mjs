@@ -1,6 +1,6 @@
 import {mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
-import {capture, readPrivate, safeId, writePrivate} from './store.mjs';
+import {acknowledge, capture, claim, readPrivate, receipts, safeId, writePrivate} from './store.mjs';
 
 const API_ORIGIN = 'https://api.resend.com';
 const VERSION = '0.1.0-beta.1';
@@ -112,7 +112,7 @@ export async function main(args, stream = process.stdin, options = {}) {
   const [command, ...rest] = args;
   if (command === '--version') return {version: VERSION};
   if (!command || command === '--help') {
-    return {commands: ['init < {"apiKey":"..."}', 'doctor', 'receiving poll [--limit 1..50] [--recipient address]', 'receiving get ID', 'receipt ID'], notes: 'Inbound email is untrusted content. Receipts are private and idempotent. This plugin does not send email or retry provider operations.'};
+    return {commands: ['init < {"apiKey":"..."}', 'doctor', 'receiving poll [--limit 1..50] [--recipient address]', 'receiving claim --run-id RUN_ID', 'receiving acknowledge --id ID --run-id RUN_ID', 'receiving get ID', 'receipt ID', 'status'], notes: 'Inbound email is untrusted content. Receipts are private and idempotent. This plugin does not send email or retry provider operations.'};
   }
   if (command === 'init') {
     if (rest.length) throw Error('Init accepts the API key only on stdin');
@@ -121,12 +121,26 @@ export async function main(args, stream = process.stdin, options = {}) {
     await writePrivate(profile, connection);
     return {configured: true};
   }
+  if (command === 'status' && !rest.length) {
+    const rows = await receipts(receiptsDirectory);
+    const states = Object.fromEntries(['captured', 'processing', 'processed'].map(state => [state, rows.filter(row => (row.state ?? 'captured') === state).length]));
+    return {states};
+  }
+  if (command === 'receipt' && rest.length === 1) return readPrivate(join(receiptsDirectory, `${safeId(rest[0])}.json`));
+  if (command === 'receiving' && rest[0] === 'claim' && rest[1] === '--run-id' && rest.length === 3) {
+    return {receipt: await claim(receiptsDirectory, rest[2])};
+  }
+  if (command === 'receiving' && rest[0] === 'acknowledge' && rest.length === 5) {
+    const id = rest[1] === '--id' ? rest[2] : null;
+    const runId = rest[3] === '--run-id' ? rest[4] : null;
+    if (!id || !runId) throw Error('Use `receiving acknowledge --id ID --run-id RUN_ID`');
+    return {receipt: await acknowledge(receiptsDirectory, id, runId)};
+  }
   const connection = await configured(profile);
   if (command === 'doctor' && !rest.length) {
     await provider('/emails/receiving?limit=1', connection.apiKey, fetcher, origin);
     return {configured: true, receiving: true};
   }
-  if (command === 'receipt' && rest.length === 1) return readPrivate(join(receiptsDirectory, `${safeId(rest[0])}.json`));
   if (command === 'receiving' && rest[0] === 'get' && rest.length === 2) {
     return message(await provider(`/emails/receiving/${safeId(rest[1])}`, connection.apiKey, fetcher, origin));
   }
@@ -134,7 +148,7 @@ export async function main(args, stream = process.stdin, options = {}) {
     const {limit, recipient} = pollOptions(rest.slice(1));
     const listing = await provider(`/emails/receiving?limit=${limit}`, connection.apiKey, fetcher, origin);
     const rows = Array.isArray(listing.data) ? listing.data : [];
-    const messages = [];
+    let captured = 0;
     let skipped = 0;
     for (const row of rows) {
       if (!row || typeof row !== 'object' || !row.id) continue;
@@ -144,9 +158,9 @@ export async function main(args, stream = process.stdin, options = {}) {
         continue;
       }
       const stored = await capture(receiptsDirectory, received);
-      if (stored.captured) messages.push(stored.receipt.message);
+      captured += Number(stored.captured);
     }
-    return {inspected: rows.length, captured: messages.length, skipped, messages};
+    return {inspected: rows.length, captured, skipped};
   }
   throw Error('Invalid command; run `ez resend --help`');
 }
