@@ -47,6 +47,8 @@ test('init stores the key privately and poll captures only the explicit recipien
   const second = await main(['receiving', 'poll', '--limit', '2', '--recipient', 'scouts@example.com'], stream({}), options);
   assert.equal(second.captured, 0);
   assert.equal((await main(['receipt', 'one'], stream({}), options)).message.subject, 'Scout one');
+  assert.equal((await main(['events', '0'], stream({}), options)).events[0].id, 'one');
+  assert.equal((await main(['events-check', 'one'], stream({}), options)).events[0].id, 'one');
   assert.equal(mock.calls.filter(call => call.options?.headers?.Authorization?.includes('re_test_')).length, 6);
 });
 

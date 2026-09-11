@@ -5,7 +5,7 @@ import {configuration} from './operations.mjs';
 import {command, serve} from './service.mjs';
 import {writePrivate} from './store.mjs';
 
-const VERSION = '0.1.0-beta.1';
+const VERSION = '0.1.0-beta.2';
 const input = async stream => { let body = ''; for await (const chunk of stream) body += chunk; try { return JSON.parse(body); } catch { throw Error('Expected JSON on stdin'); } };
 const translate = args => {
   const [commandName, ...rest] = args;
@@ -16,8 +16,8 @@ const translate = args => {
   if (commandName === 'receiving' && rest[0] === 'claim') return ['claim', rest.slice(1)];
   if (commandName === 'receiving' && rest[0] === 'acknowledge') return ['acknowledge', rest.slice(1)];
   if (commandName === 'events-head') return ['events-head', []];
-  if (commandName === 'events') return ['events', [{after: Number(rest[0])}]];
-  if (commandName === 'events-check') return ['events-check', [{ids: rest}]];
+  if (commandName === 'events') return ['events', {after: Number(rest[0])}];
+  if (commandName === 'events-check') return ['events-check', {ids: rest}];
   throw Error('Invalid command; run `ez resend --help`');
 };
 
