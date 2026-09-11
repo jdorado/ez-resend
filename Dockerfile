@@ -6,4 +6,4 @@ COPY src ./src
 COPY skills ./skills
 RUN mkdir /state && chown -R node:node /app /state
 USER node
-CMD ["node", "-e", "setInterval(() => {}, 3600000)"]
+CMD ["node", "/app/src/cli.mjs", "serve"]

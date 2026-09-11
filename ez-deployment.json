@@ -1,22 +1,24 @@
 {
   "schemaVersion": 2,
   "services": {
-    "plugin": {
+    "resend": {
       "buildTarget": "runtime",
       "volumes": {
         "profile": "/state"
       },
+      "command": ["node", "/app/src/cli.mjs", "serve"],
+      "environment": {"EZ_RESEND_SERVICE": "1"},
       "healthcheck": [
         "node",
         "/app/src/cli.mjs",
-        "--version"
+        "health"
       ],
       "memoryMiB": 128
     }
   },
   "commands": {
     "resend": {
-      "service": "plugin",
+      "service": "resend",
       "argv": [
         "node",
         "/app/src/cli.mjs"
