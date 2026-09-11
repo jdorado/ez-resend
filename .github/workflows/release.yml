@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact package version to release from main
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    environment: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Verify release contents
+        run: |
+          npm run verify
+          npm run release:check
+          node -e 'const expected = process.env.EXPECTED_VERSION; const actual = require("./package.json").version; if (actual !== expected) { throw new Error(`package.json is ${actual}, expected ${expected}`); }'
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+      - name: Refuse an existing version
+        run: |
+          package_name=$(node -p 'require("./package.json").name')
+          if npm view "$package_name@${EXPECTED_VERSION}" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "Version $package_name@$EXPECTED_VERSION is already published."
+            exit 1
+          fi
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+      - name: Publish with npm trusted publishing
+        run: npm publish --access public --provenance
+      - name: Create GitHub prerelease
+        run: gh release create "v${EXPECTED_VERSION}" --target "$GITHUB_SHA" --prerelease --generate-notes
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
