@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.3
+
+- Publish approved prereleases to npm latest while retaining beta versions.
+- Verify the reviewed artifact digest before the existing OIDC publisher writes
+  to npm. Preserve the protected release environment and its provider trust.
+
 ## 0.1.0-beta.2
 
 - Fix `events` and `events-check` client argument serialization so captured

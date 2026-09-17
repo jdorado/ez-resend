@@ -5,6 +5,8 @@ import {readFileSync} from 'node:fs';
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--ignore-scripts', '--json'], {encoding: 'utf8'}));
 const files = pack.files.map(file => file.path);
+assert.equal(pkg.publishConfig?.access, 'public');
+assert.equal(pkg.publishConfig?.tag, 'latest');
 for (const required of ['LICENSE', 'README.md', 'SECURITY.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'Dockerfile', '.dockerignore', 'ez-plugin.json', 'ez-deployment.json']) {
   assert(files.includes(required), `Missing ${required}`);
 }
