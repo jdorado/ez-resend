@@ -7,6 +7,10 @@ on:
         description: Exact package version to release from main
         required: true
         type: string
+      artifact-sha256:
+        description: SHA-256 of the independently reviewed packed artifact
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -40,8 +44,18 @@ jobs:
           fi
         env:
           EXPECTED_VERSION: ${{ inputs.version }}
+      - name: Verify exact reviewed artifact
+        run: |
+          npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP"
+          candidate="$RUNNER_TEMP/jc_stack-ez-resend-${EXPECTED_VERSION}.tgz"
+          node scripts/verify-release-artifact.mjs "$candidate" "$EXPECTED_SHA256"
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+          EXPECTED_SHA256: ${{ inputs.artifact-sha256 }}
       - name: Publish with npm trusted publishing
-        run: npm publish --access public --provenance
+        run: npm publish "$RUNNER_TEMP/jc_stack-ez-resend-${EXPECTED_VERSION}.tgz" --ignore-scripts --access public --tag latest --provenance
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
       - name: Create GitHub prerelease
         run: gh release create "v${EXPECTED_VERSION}" --target "$GITHUB_SHA" --prerelease --generate-notes
         env:

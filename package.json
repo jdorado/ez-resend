@@ -1,6 +1,6 @@
 {
   "name": "@jc_stack/ez-resend",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "description": "Dockerized Resend receiving plugin for Ez agents",
   "type": "module",
   "license": "MIT",
@@ -15,6 +15,7 @@
     "src",
     "skills",
     "test",
+    "scripts/verify-release-artifact.mjs",
     "Dockerfile",
     ".dockerignore",
     "ez-plugin.json",
@@ -33,7 +34,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "beta",
+    "tag": "latest",
     "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
