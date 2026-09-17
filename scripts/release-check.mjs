@@ -13,4 +13,6 @@ for (const required of ['LICENSE', 'README.md', 'SECURITY.md', 'CONTRIBUTING.md'
 for (const entry of pkg.files) assert(files.some(file => file === entry || file.startsWith(`${entry}/`)), `Declared package entry missing: ${entry}`);
 for (const file of files) assert(!/(^|\/)(node_modules|\.git|\.env|\.private)(\/|$)|\.(tgz|log)$/.test(file), `Private package entry: ${file}`);
 assert.equal(JSON.parse(readFileSync('ez-plugin.json', 'utf8')).version, pkg.version);
+const {main} = await import('../src/cli.mjs');
+assert.equal((await main(['--version'])).version, pkg.version);
 console.log(JSON.stringify({name: pkg.name, version: pkg.version, files}, null, 2));

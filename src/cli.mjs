@@ -1,11 +1,11 @@
-import {mkdir} from 'node:fs/promises';
+import {mkdir, readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {client} from './client.mjs';
 import {configuration} from './operations.mjs';
 import {command, serve} from './service.mjs';
 import {writePrivate} from './store.mjs';
 
-const VERSION = '0.1.0-beta.2';
+const {version: VERSION} = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const input = async stream => { let body = ''; for await (const chunk of stream) body += chunk; try { return JSON.parse(body); } catch { throw Error('Expected JSON on stdin'); } };
 const translate = args => {
   const [commandName, ...rest] = args;
