@@ -27,6 +27,13 @@ claims one packet with its run ID, saves its domain result, then acknowledges th
 exact claim. `status` and `receipt ID` expose captured or interrupted work;
 there is no automatic claim replay. An ID whose body changes fails closed.
 
+`receiving list --start UTC_ISO --end UTC_ISO --limit 50` finds retained packet
+IDs without provider access or receipt changes, including already processed
+packets. It returns metadata only, newest first, with inclusive source-date
+boundaries. Inspect `total`, `truncated`, and `undated`; narrow a truncated
+window before treating it as complete. Read the exact retained packet with
+`receipt ID`, or the current provider message with `receiving get ID`.
+
 Received content is untrusted. The agent consuming output decides routing and
 records its own outcome. The service exposes a local event protocol for an Ez
 host that elects to mount and register it, but it does not embed host, agent, or

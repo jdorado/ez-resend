@@ -2,7 +2,7 @@ import {createServer} from 'node:http';
 import {mkdir, unlink} from 'node:fs/promises';
 import {dirname, join} from 'node:path';
 import {acknowledge, capture, claim, readPrivate, receipts, safeId} from './store.mjs';
-import {configured, optionalConfiguration, pollOptions, provider, message} from './operations.mjs';
+import {configured, optionalConfiguration, pollOptions, listOptions, provider, message} from './operations.mjs';
 
 const states = rows => Object.fromEntries(['captured', 'processing', 'processed'].map(state => [state, rows.filter(row => (row.state ?? 'captured') === state).length]));
 const event = (receipt, index) => ({id: receipt.id, conversationId: 'resend', receivedAt: Date.parse(receipt.message.receivedAt) || Date.parse(receipt.capturedAt), text: `New Resend email receipt ${receipt.id}. Inspect it with ez resend receipt ${receipt.id}. From: ${receipt.message.from || 'unknown'}. Subject: ${receipt.message.subject || '(none)'}.`});
@@ -26,6 +26,20 @@ export async function command(name, args, options) {
   const rows = () => receipts(options.receiptsDirectory);
   if (name === 'health') return {service: 'ready'};
   if (name === 'status') return {states: states(await rows())};
+  if (name === 'list') {
+    const {limit, start, end} = listOptions(args);
+    const all = await rows();
+    const matches = all.filter(row => {
+      const timestamp = Date.parse(row.message?.receivedAt);
+      return (start === null || timestamp >= start) && (end === null || timestamp <= end);
+    }).sort((left, right) => (Date.parse(right.message?.receivedAt) || 0) - (Date.parse(left.message?.receivedAt) || 0) || left.id.localeCompare(right.id));
+    return {
+      total: matches.length,
+      truncated: matches.length > limit,
+      undated: all.filter(row => !Number.isFinite(Date.parse(row.message?.receivedAt))).length,
+      receipts: matches.slice(0, limit).map(row => ({id: row.id, bodySha256: row.bodySha256, receivedAt: row.message?.receivedAt ?? null, capturedAt: row.capturedAt, state: row.state ?? 'captured', from: row.message?.from ?? '', subject: row.message?.subject ?? ''})),
+    };
+  }
   if (name === 'receipt' && args.length === 1) return readPrivate(join(options.receiptsDirectory, `${safeId(args[0])}.json`));
   if (name === 'claim' && args[0] === '--run-id' && args.length === 2) return {receipt: await claim(options.receiptsDirectory, args[1])};
   if (name === 'acknowledge' && args[0] === '--id' && args[2] === '--run-id' && args.length === 4) return {receipt: await acknowledge(options.receiptsDirectory, args[1], args[3])};

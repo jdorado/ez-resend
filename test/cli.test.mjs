@@ -7,6 +7,7 @@ import {join} from 'node:path';
 import {main} from '../src/cli.mjs';
 import {client} from '../src/client.mjs';
 import {serve} from '../src/service.mjs';
+import {capture, writePrivate} from '../src/store.mjs';
 
 const stream = value => Readable.from([JSON.stringify(value)]);
 const detail = (id, to = 'scouts@example.com') => ({id, from: 'Source <source@example.org>', to, subject: `Scout ${id}`, created_at: '2026-09-11T00:00:00.000Z', message_id: `<${id}>`, text: `Body ${id}`, headers: {'authentication-results': 'dkim=pass'}, attachments: []});
@@ -89,4 +90,45 @@ test('resident Docker-service shape captures independently and exposes event rea
   assert.equal((await client(socketPath, 'status')).states.captured, 1);
   assert.deepEqual(await client(socketPath, 'events-head'), {cursor: 1});
   assert.equal((await client(socketPath, 'events', {after: 0})).events[0].id, 'one');
+  assert.equal((await main(['receiving', 'list', '--start', '2026-09-11T00:00:00Z', '--end', '2026-09-11T00:00:00Z'], stream({}), {socketPath})).receipts[0].id, 'one');
+});
+
+test('retained packet discovery includes all states and never reads provider or changes receipts', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'ez-resend-list-'));
+  t.after(() => rm(root, {recursive: true, force: true}));
+  const receiptsDirectory = join(root, 'receipts');
+  let calls = 0;
+  const options = {profile: join(root, 'missing-profile.json'), receiptsDirectory, fetcher: async () => { calls += 1; throw Error('Provider must not be read'); }};
+  assert.deepEqual(await main(['receiving', 'list'], stream({}), options), {total: 0, truncated: false, undated: 0, receipts: []});
+  const fixtures = [
+    ['captured', 'captured', '2026-09-29T09:00:00Z'],
+    ['processing', 'processing', '2026-09-30T08:00:00Z'],
+    ['processed', 'processed', '2026-09-30T09:00:00Z'],
+    ['later', 'captured', '2026-09-30T09:00:01Z'],
+    ['undated', 'captured', null],
+  ];
+  for (const [id, state, receivedAt] of fixtures) {
+    const {receipt} = await capture(receiptsDirectory, {id, receivedAt, from: 'Source', subject: `Packet ${id}`, text: 'Private body', html: '<p>Private body</p>', recipients: ['private@example.com']});
+    await writePrivate(join(receiptsDirectory, `${id}.json`), {...receipt, state});
+  }
+  const before = await Promise.all(fixtures.map(([id]) => readFile(join(receiptsDirectory, `${id}.json`), 'utf8')));
+  const args = ['receiving', 'list', '--start', '2026-09-29T09:00:00Z', '--end', '2026-09-30T09:00:00.000Z'];
+  const listed = await main([...args, '--limit', '2'], stream({}), options);
+  assert.equal(listed.total, 3);
+  assert.equal(listed.truncated, true);
+  assert.equal(listed.undated, 1);
+  assert.deepEqual(listed.receipts.map(row => [row.id, row.state]), [['processed', 'processed'], ['processing', 'processing']]);
+  assert.equal(JSON.stringify(listed).includes('Private body'), false);
+  assert.equal(JSON.stringify(listed).includes('private@example.com'), false);
+  const full = await main([...args, '--limit', '50'], stream({}), options);
+  assert.equal(full.truncated, false);
+  assert.equal(full.receipts[2].id, 'captured');
+  assert.equal(full.receipts[0].bodySha256, JSON.parse(before[2]).bodySha256);
+  assert.equal((await main(['receipt', full.receipts[0].id], stream({}), options)).message.text, 'Private body');
+  assert.deepEqual(await Promise.all(fixtures.map(([id]) => readFile(join(receiptsDirectory, `${id}.json`), 'utf8'))), before);
+  assert.equal(calls, 0);
+  for (const invalid of [['--limit', '51'], ['--start', '2026-02-30T00:00:00Z'], ['--start', '2026-09-30'], ['--end'], ['--limit', '2', '--limit', '3'], ['--start', '2026-10-01T00:00:00Z', '--end', '2026-09-30T00:00:00Z']]) {
+    await assert.rejects(main(['receiving', 'list', ...invalid], stream({}), options));
+  }
+  assert.equal(calls, 0);
 });
