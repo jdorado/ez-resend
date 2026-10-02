@@ -24,12 +24,13 @@
     "SECURITY.md",
     "CONTRIBUTING.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "pnpm-workspace.yaml"
   ],
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "verify": "npm test && node --check src/cli.mjs && node --check src/store.mjs",
-    "prepublishOnly": "npm run verify",
+    "verify": "pnpm test && node --check src/cli.mjs && node --check src/store.mjs",
+    "prepublishOnly": "pnpm run verify",
     "release:check": "node scripts/release-check.mjs"
   },
   "publishConfig": {
@@ -57,5 +58,6 @@
     "kind": "plugin",
     "stateSchema": 1,
     "mainProtocol": 1
-  }
+  },
+  "packageManager": "pnpm@10.30.3"
 }
