@@ -23,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -30,8 +33,8 @@ jobs:
           package-manager-cache: false
       - name: Verify release contents
         run: |
-          npm run verify
-          npm run release:check
+          pnpm run verify
+          pnpm run release:check
           node -e 'const expected = process.env.EXPECTED_VERSION; const actual = require("./package.json").version; if (actual !== expected) { throw new Error(`package.json is ${actual}, expected ${expected}`); }'
         env:
           EXPECTED_VERSION: ${{ inputs.version }}
