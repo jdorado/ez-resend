@@ -32,7 +32,7 @@ export async function provider(path, apiKey, fetcher = fetch, origin = API_ORIGI
 export function message(value) {
   if (!value || typeof value !== 'object' || typeof value.id !== 'string') throw Error('Resend returned an invalid received message');
   const recipients = Array.isArray(value.to) ? value.to : typeof value.to === 'string' ? [value.to] : [];
-  return {id: value.id, from: typeof value.from === 'string' ? value.from : '', recipients: recipients.filter(item => typeof item === 'string').map(item => item.toLowerCase()), subject: typeof value.subject === 'string' ? value.subject : '', text: typeof value.text === 'string' ? value.text : '', html: typeof value.html === 'string' ? value.html : '', receivedAt: typeof value.created_at === 'string' ? value.created_at : new Date().toISOString()};
+  return {id: value.id, from: typeof value.from === 'string' ? value.from : '', recipients: recipients.filter(item => typeof item === 'string').map(item => item.toLowerCase()), subject: typeof value.subject === 'string' ? value.subject : '', text: typeof value.text === 'string' ? value.text : '', html: typeof value.html === 'string' ? value.html : '', receivedAt: typeof value.created_at === 'string' ? value.created_at : null};
 }
 
 export function pollOptions(args) {

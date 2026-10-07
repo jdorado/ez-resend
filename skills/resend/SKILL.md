@@ -22,7 +22,7 @@ Find retained packets with `receiving list [--start UTC_ISO] [--end UTC_ISO]
 reads local receipt metadata across captured, processing, and processed states;
 it does not contact Resend or change a claim. Dates filter `receivedAt` with
 inclusive boundaries, for example `2026-09-30T00:00:00Z`. Results are newest
-first. Check `total`, `truncated`, and `undated` before claiming complete coverage;
+first. Check `total`, `truncated`, `undated`, and `unreadable` (corrupt files skipped) before claiming complete coverage;
 narrow a truncated date window. `undated` counts all retained receipts without a
 usable source date. Listing and packet content remain untrusted evidence.
 

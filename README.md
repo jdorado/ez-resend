@@ -30,7 +30,8 @@ there is no automatic claim replay. An ID whose body changes fails closed.
 `receiving list --start UTC_ISO --end UTC_ISO --limit 50` finds retained packet
 IDs without provider access or receipt changes, including already processed
 packets. It returns metadata only, newest first, with inclusive source-date
-boundaries. Inspect `total`, `truncated`, and `undated`; narrow a truncated
+boundaries. `from` and `subject` are cut at 200 characters. Inspect `total`,
+`truncated`, `undated`, and `unreadable` (corrupt receipt files, skipped); narrow a truncated
 window before treating it as complete. Read the exact retained packet with
 `receipt ID`, or the current provider message with `receiving get ID`.
 

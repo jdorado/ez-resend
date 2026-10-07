@@ -1,9 +1,11 @@
 import {createServer} from 'node:http';
 import {mkdir, unlink} from 'node:fs/promises';
 import {dirname, join} from 'node:path';
-import {acknowledge, capture, claim, readPrivate, receipts, safeId} from './store.mjs';
+import {acknowledge, capture, claim, readPrivate, readReceipts, receipts, safeId} from './store.mjs';
 import {configured, optionalConfiguration, pollOptions, listOptions, provider, message} from './operations.mjs';
 
+const LIST_TEXT_LIMIT = 200;
+const clip = value => typeof value === 'string' ? value.slice(0, LIST_TEXT_LIMIT).replace(/[\uD800-\uDBFF]$/, '') : '';
 const states = rows => Object.fromEntries(['captured', 'processing', 'processed'].map(state => [state, rows.filter(row => (row.state ?? 'captured') === state).length]));
 const event = (receipt, index) => ({id: receipt.id, conversationId: 'resend', receivedAt: Date.parse(receipt.message.receivedAt) || Date.parse(receipt.capturedAt), text: `New Resend email receipt ${receipt.id}. Inspect it with ez resend receipt ${receipt.id}. From: ${receipt.message.from || 'unknown'}. Subject: ${receipt.message.subject || '(none)'}.`});
 
@@ -28,7 +30,7 @@ export async function command(name, args, options) {
   if (name === 'status') return {states: states(await rows())};
   if (name === 'list') {
     const {limit, start, end} = listOptions(args);
-    const all = await rows();
+    const {receipts: all, unreadable} = await readReceipts(options.receiptsDirectory);
     const matches = all.filter(row => {
       const timestamp = Date.parse(row.message?.receivedAt);
       return (start === null || timestamp >= start) && (end === null || timestamp <= end);
@@ -37,7 +39,8 @@ export async function command(name, args, options) {
       total: matches.length,
       truncated: matches.length > limit,
       undated: all.filter(row => !Number.isFinite(Date.parse(row.message?.receivedAt))).length,
-      receipts: matches.slice(0, limit).map(row => ({id: row.id, bodySha256: row.bodySha256, receivedAt: row.message?.receivedAt ?? null, capturedAt: row.capturedAt, state: row.state ?? 'captured', from: row.message?.from ?? '', subject: row.message?.subject ?? ''})),
+      unreadable,
+      receipts: matches.slice(0, limit).map(row => ({id: row.id, bodySha256: row.bodySha256, receivedAt: row.message?.receivedAt ?? null, capturedAt: row.capturedAt, state: row.state ?? 'captured', from: clip(row.message?.from), subject: clip(row.message?.subject)})),
     };
   }
   if (name === 'receipt' && args.length === 1) return readPrivate(join(options.receiptsDirectory, `${safeId(args[0])}.json`));
