@@ -56,7 +56,11 @@ jobs:
           EXPECTED_VERSION: ${{ inputs.version }}
           EXPECTED_SHA256: ${{ inputs.artifact-sha256 }}
       - name: Publish with npm trusted publishing
-        run: npm publish "$RUNNER_TEMP/jc_stack-ez-resend-${EXPECTED_VERSION}.tgz" --ignore-scripts --access public --tag latest --provenance
+        run: |
+          # A private QA release candidate must never take the latest dist-tag.
+          dist_tag=latest
+          case "$EXPECTED_VERSION" in *.rc.*) dist_tag=rc ;; esac
+          npm publish "$RUNNER_TEMP/jc_stack-ez-resend-${EXPECTED_VERSION}.tgz" --ignore-scripts --access public --tag "$dist_tag" --provenance
         env:
           EXPECTED_VERSION: ${{ inputs.version }}
       - name: Create GitHub prerelease
