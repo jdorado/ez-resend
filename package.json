@@ -1,6 +1,6 @@
 {
   "name": "@jc_stack/ez-resend",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4.rc.1",
   "description": "Dockerized Resend receiving plugin for Ez agents",
   "type": "module",
   "license": "MIT",

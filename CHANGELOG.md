@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0-beta.4.rc.1 (private QA candidate)
+
+- Add a bounded, date-filtered read-only listing of retained receipt metadata
+  across all claim states. Report truncation and undated receipt counts without
+  contacting the provider, exposing message bodies, or modifying receipt state.
+  Listed `from` and `subject` are limited to 200 characters, unreadable receipt
+  files are skipped by the listing only and counted as `unreadable` (claim,
+  status, and events still fail closed on them), and a message without a source
+  date is stored undated instead of using the capture time.
+- Publish release candidates (`.rc.` versions) to the `rc` npm dist-tag, never
+  `latest`.
+
 ## 0.1.0-beta.3
 
 - Derive CLI version from package metadata and validate release consistency.

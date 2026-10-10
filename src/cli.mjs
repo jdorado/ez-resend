@@ -12,6 +12,7 @@ const translate = args => {
   if (commandName === 'doctor' || commandName === 'status' || commandName === 'health') return [commandName, []];
   if (commandName === 'receipt' && rest.length === 1) return ['receipt', rest];
   if (commandName === 'receiving' && rest[0] === 'poll') return ['poll', rest.slice(1)];
+  if (commandName === 'receiving' && rest[0] === 'list') return ['list', rest.slice(1)];
   if (commandName === 'receiving' && rest[0] === 'get' && rest.length === 2) return ['get', [rest[1]]];
   if (commandName === 'receiving' && rest[0] === 'claim') return ['claim', rest.slice(1)];
   if (commandName === 'receiving' && rest[0] === 'acknowledge') return ['acknowledge', rest.slice(1)];
@@ -28,7 +29,7 @@ export async function main(args, stream = process.stdin, options = {}) {
   const context = {profile, receiptsDirectory, socketPath, fetcher: options.fetcher ?? fetch, origin: options.origin};
   const [commandName] = args;
   if (commandName === '--version') return {version: VERSION};
-  if (!commandName || commandName === '--help') return {commands: ['init < {"apiKey":"...","recipient":"scouts@example.com"}', 'doctor', 'status', 'receiving poll [--limit 1..50] [--recipient address]', 'receiving claim --run-id RUN_ID', 'receiving acknowledge --id ID --run-id RUN_ID', 'receiving get ID', 'receipt ID'], service: 'The Docker service owns periodic receipt capture. Its event socket is portable for an Ez host to register; received content stays untrusted.'};
+  if (!commandName || commandName === '--help') return {commands: ['init < {"apiKey":"...","recipient":"scouts@example.com"}', 'doctor', 'status', 'receiving list [--start UTC_ISO] [--end UTC_ISO] [--limit 1..50]', 'receiving poll [--limit 1..50] [--recipient address]', 'receiving claim --run-id RUN_ID', 'receiving acknowledge --id ID --run-id RUN_ID', 'receiving get ID', 'receipt ID'], service: 'The Docker service owns periodic receipt capture. Its event socket is portable for an Ez host to register; received content stays untrusted.'};
   if (commandName === 'init') {
     if (args.length !== 1) throw Error('Init accepts the API key and receiving recipient only on stdin');
     const connection = configuration(await input(stream));

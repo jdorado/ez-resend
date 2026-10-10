@@ -38,14 +38,32 @@ export async function capture(receiptsDirectory, message) {
   }
 }
 
-export async function receipts(receiptsDirectory) {
+async function receiptFiles(receiptsDirectory) {
   try {
-    const files = (await readdir(receiptsDirectory)).filter(file => /^[A-Za-z0-9_-]{1,180}\.json$/.test(file)).sort();
-    return Promise.all(files.map(file => readPrivate(join(receiptsDirectory, file))));
+    return (await readdir(receiptsDirectory)).filter(file => /^[A-Za-z0-9_-]{1,180}\.json$/.test(file)).sort();
   } catch (error) {
     if (error.code === 'ENOENT') return [];
     throw error;
   }
+}
+
+// Lenient: only for the read-only listing, which reports skipped files as `unreadable`.
+export async function readReceipts(receiptsDirectory) {
+  const files = await receiptFiles(receiptsDirectory);
+  const loaded = await Promise.all(files.map(async file => {
+    try {
+      const value = await readPrivate(join(receiptsDirectory, file));
+      return value && typeof value === 'object' && value.id === file.slice(0, -5) && value.message && typeof value.message === 'object' ? value : null;
+    } catch { return null; }
+  }));
+  const rows = loaded.filter(Boolean);
+  return {receipts: rows, unreadable: loaded.length - rows.length};
+}
+
+// Strict: claim, status, and events fail closed on any unreadable receipt.
+export async function receipts(receiptsDirectory) {
+  const files = await receiptFiles(receiptsDirectory);
+  return Promise.all(files.map(file => readPrivate(join(receiptsDirectory, file))));
 }
 
 export async function claim(receiptsDirectory, runId) {
