@@ -6,7 +6,7 @@ here; business routing belongs to the consuming agent. Never add relay imports,
 host launchers, provider credentials, automatic retries, or arbitrary Docker
 configuration.
 
-Run `npm run verify`, `npm run release:check`, `docker build --target runtime -t
+Run `pnpm run verify`, `pnpm run release:check`, `docker build --target runtime -t
 ez-resend:check .`, and `git diff --check`. Changes to credential handling,
 receipt identity, or recovery require focused negative tests.
 
