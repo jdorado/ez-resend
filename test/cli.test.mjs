@@ -146,7 +146,7 @@ test('list bounds from and subject so one oversized receipt cannot flood output'
   assert.equal((await main(['receipt', 'huge'], stream({}), options)).message.subject.length, 1024 * 1024);
 });
 
-test('list skips corrupt receipt files and reports how many were unreadable', async t => {
+test('list skips corrupt receipt files and reports unreadable while claim, status, and events fail closed', async t => {
   const root = await mkdtemp(join(tmpdir(), 'ez-resend-corrupt-'));
   t.after(() => rm(root, {recursive: true, force: true}));
   const receiptsDirectory = join(root, 'receipts');
@@ -161,8 +161,11 @@ test('list skips corrupt receipt files and reports how many were unreadable', as
   assert.deepEqual(listed.receipts.map(row => row.id), ['good']);
   assert.equal(listed.total, 1);
   assert.equal(listed.unreadable, 4);
-  assert.equal((await main(['status'], stream({}), options)).states.captured, 1);
-  assert.equal((await main(['receiving', 'claim', '--run-id', 'run_one'], stream({}), options)).receipt.id, 'good');
+  const goodBefore = await readFile(join(receiptsDirectory, 'good.json'), 'utf8');
+  await assert.rejects(main(['receiving', 'claim', '--run-id', 'run_one'], stream({}), options), SyntaxError);
+  await assert.rejects(main(['status'], stream({}), options), SyntaxError);
+  await assert.rejects(main(['events-head'], stream({}), options), SyntaxError);
+  assert.equal(await readFile(join(receiptsDirectory, 'good.json'), 'utf8'), goodBefore);
 });
 
 test('a provider message without created_at is undated and never lands in a date window', async t => {
