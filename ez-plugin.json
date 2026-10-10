@@ -3,6 +3,7 @@
   "id": "resend",
   "version": "0.1.0-beta.4.rc.1",
   "description": "Receive Resend email into private, idempotent agent receipts",
+  "example": "resend status",
   "commands": {
     "resend": {
       "executable": "bin/ez-resend",
