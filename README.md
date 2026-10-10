@@ -44,3 +44,6 @@ credentials in repository files.
 This is a beta release. Offline tests and Docker manager checks validate the
 package boundary; live acceptance requires an authorized Resend account, a
 read-only `doctor`, and service receipt capture on the target agent.
+
+Requires Ez core 0.1.0-beta.50 or newer for the manifest example.
+Older cores refuse the update and retain the installed version.

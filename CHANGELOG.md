@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.1.0-beta.4.rc.1 (private QA candidate)
+## 0.1.0-beta.4
+
+- Requires Ez core 0.1.0-beta.50 or newer for the manifest example.
+  Older cores refuse the update and retain the installed version.
+- Add a representative manifest example for tool discovery.
 
 - Add a bounded, date-filtered read-only listing of retained receipt metadata
   across all claim states. Report truncation and undated receipt counts without
@@ -9,8 +13,6 @@
   files are skipped by the listing only and counted as `unreadable` (claim,
   status, and events still fail closed on them), and a message without a source
   date is stored undated instead of using the capture time.
-- Publish release candidates (`.rc.` versions) to the `rc` npm dist-tag, never
-  `latest`.
 
 ## 0.1.0-beta.3
 
